@@ -16,13 +16,14 @@ class Request {
         }
         if(this.headers["Content-Type"] === "application/json"){
             this.bodyText = JSON.stringify(this.body);
-        }else if(this.headers["Content-type"] === "application/x-www-form-urlencoded"){
+        }else if(this.headers["Content-Type"] === "application/x-www-form-urlencoded"){
             this.bodyText = Object.keys(this.body).map(key=>`${key}=${encodeURIComponent(this.body[key])}`).join('&');
         }
-        this.headers["Content-Type"] = this.bodyText.length;
+        this.headers["Content-Length"] = this.bodyText.length;
    }
    send(){
        return new Promise((resolve, reject)=>{
+           console.log('send send')
             const parser = new ResponseParser;
             resolve("");
 
@@ -47,7 +48,7 @@ class ResponseParser{
 
 void async function(){
     let request = new Request({
-        method: "post",
+        method: "POST",
         host: "127.0.0.1",
         port: "8088",
         path: "/",
@@ -55,7 +56,7 @@ void async function(){
             ["X-Foo2"]: "costumed"
         },
         body:{
-            name:"winter"
+            name:"wangqi"
         }
     });
     let response = await request.send();
