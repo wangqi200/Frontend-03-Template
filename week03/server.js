@@ -15,27 +15,27 @@ http.createServer((request, response)=>{
         console.log('body',body);
         response.writeHead(200, {'Content-Type': 'text/html'});
         response.end(
-            `<html maaa=a>
-                <head>
-                    <style>
-                        body div #myid{
-                            width:100px;
-                            background-color:#ff5000;
-                        }
-                        body div img{
-                            width:30px;
-                            background-color:#ff1111;
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div>
-                        <img id='myid'/>
-                        <img />
-                        Hello world
-                    </div>
-                </body>
-           </html>\n`);
+`<html maaa=a>
+<head>
+    <style>
+body div #myid{
+    width:100px;
+    background-color:#ff5000;
+}
+body div img{
+    width:30px;
+    background-color:#ff1111;
+}
+    </style>
+</head>
+<body>
+    <div>
+        <img id='myid' />
+        <img />
+        Hello world
+    </div>
+</body>
+</html>\n`);
         
     })
 }).listen(8088);
