@@ -30,13 +30,12 @@ body div img{
 </head>
 <body>
     <div>
-        <img id='myid' />
+        <img id="myid"/>
         <img />
-        Hello world
     </div>
 </body>
-</html>\n`);
+</html>`);
         
-    })
+    });
 }).listen(8088);
 console.log('server started');

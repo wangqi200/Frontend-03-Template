@@ -14,17 +14,18 @@ function addCSSRules(text){
     rules.push(...ast.stylesheet.rules);
 }
 function match(element, selector){
+    console.log(element,selector)
     if(!selector || !element.attributes){
         return false;
     }
     if(selector.charAt(0) == "#"){
         var attr = element.attributes.filter(attr => attr.name === "id")[0]
-        if(attr && attr.value === selector.replace("#", '')){
+        if(attr && attr.value === selector.replace("#", "")){
             return true;
         }
     }else if(selector.charAt(0) == "."){
         var attr = element.attributes.filter(attr => attr.name === "class")[0]
-        if(attr && attr.value === selector.replace(".", '')){
+        if(attr && attr.value === selector.replace(".", "")){
             return true;
         }
     }else{
@@ -63,12 +64,13 @@ function compare(sp1, sp2){
 }
 
 function computeCSS(element){
-    // console.log(rules);
+    // rules 后面有2条内容，但是element attributes有内容
+    // console.log('rules',rules);
     // console.log("compute CSS fro Element", element);
     var elements = stack.slice().reverse();
     if(!element.computedStyle){
         element.computedStyle = {};
-
+ 
 
 
     }
@@ -373,12 +375,21 @@ function selfClosingStartTag(c){
         
     }
 }
-module.exports.parseHTML = function parseHTML(html){
-    // console.log('html',html);
+// module.exports.parseHTML = function parseHTML(html){
+//     // console.log('html',html);
+//     let state = data;
+//     for(let c of html){
+//         state = state(c);
+//     }
+//     state = state(EOF);
+//     // console.log(stack[0])
+//     return stack[0];
+// }
+module.exports.parseHTML = function parseHTML(html) { // module.exports?
     let state = data;
-    for(let c of html){
+    for (let c of html) {
         state = state(c);
     }
-    state = state(EOF);
-    // console.log(stack[0])
+    state(EOF); // force the State Machine to stop here.
+    return stack[0];
 }
