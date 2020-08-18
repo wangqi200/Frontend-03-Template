@@ -27,9 +27,9 @@ class Request {
         // console.log(this.host,this.port,this.toString());
         // debugger;
         return new Promise((resolve, reject) => {
-            // const parser = new ResponseParser;
-            //  有差别
-            const parser = new ResponseParser()
+            const parser = new ResponseParser;
+            //  有差别，两种写法应该是没差别的
+            // const parser = new ResponseParser()
             if (connection) {
                 connection.write(this.toString());
             } else {
@@ -56,7 +56,7 @@ class Request {
             });
         })
     }
-// 有差别 这个位置的写法各有不同
+// 有差别 这个位置的写法各有不同，但都是正确的，下面的代码没有更改
     toString() {
         return `${this.method} ${this.path} HTTP/1.1\r\n` +
             `${Object.keys(this.headers).map(key=>`${key}: ${this.headers[key]}`).join('\r\n')}\r\n\r\n` +
@@ -102,7 +102,7 @@ class ResponseParser {
     receiveChar(char) {
         if (this.current === this.WAITING_STATUS_LINE) {
             if (char === '\r') {
-                // 有差别，状态机写错了？
+                // 有差别，状态机写错了
                 // this.current = this.WAITING_HEADER_LINE_END;
                 this.current = this.WAITING_STATUS_LINE_END
             } else {
@@ -189,7 +189,7 @@ class TrunkedBodyParser {
             //     this.current = this.WAITING_NEW_LINE;
             //     this.length = 0; //RESET for a chunk
             // }
-            // 有差别，更正后的，上面错误的代码不知道是怎么加的 23333
+            // 有差别，更正后的，上面的代码不知道是怎么加的 23333  但应该和下面的是相同含义
             this.content.push(char);
             this.length--;
             if (this.length === 0) {
@@ -232,3 +232,5 @@ void async function () {
     // }
 
 }();
+
+// 备注：主要bug 是状态机的执行顺序写错了，以及状态机的赋值用了 === 

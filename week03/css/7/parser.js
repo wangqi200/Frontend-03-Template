@@ -57,22 +57,16 @@ function specificity(selector) {
 }
 
 function compare(sp1, sp2) {
-    // 有差别
-    // if (sp1[0] - sp2[0]) {
-    //     return sp1[0] - sp2[0];
-    // }
-    // if (sp1[1] - sp2[1]) {
-    //     return sp1[1] - sp2[1];
-    // }
-    // if (sp1[2] - sp2[2]) {
-    //     return sp1[2] - sp2[2];
-    // }
-    // return sp1[3] - sp2[3];
-    if (sp1[0] - sp2[0]) return spa1[0] - sp2[0]
-    if (spa1[1] - spa2[1]) return spa1[1] - spa2[1]
-    if (spa1[2] - spa2[2]) return spa1[2] - spa2[2]
-
-    return spa1[3] - sp2[3]
+    if (sp1[0] - sp2[0]) {
+        return sp1[0] - sp2[0];
+    }
+    if (sp1[1] - sp2[1]) {
+        return sp1[1] - sp2[1];
+    }
+    if (sp1[2] - sp2[2]) {
+        return sp1[2] - sp2[2];
+    }
+    return sp1[3] - sp2[3];
 }
 
 function computeCSS(element) {
@@ -155,7 +149,7 @@ function emit(token) {
         computeCSS(element);
 
         top.children.push(element);
-        // 有差别，为什么没有这句了
+        // 有差别，为什么没有这句了，为什么不挂在过去了
         // element.parent = top;
         if (!token.isSelfClosing) {
             stack.push(element);
@@ -193,8 +187,7 @@ function data(c) {
         emit({
             type: 'EOF'
         })
-        // 有差别，怎么不return了呢
-        // return;
+        return;
     } else {
         // 文本节点
         emit({
@@ -259,7 +252,6 @@ function tagName(c) {
 function beforeAttributeName(c) {
     if (c.match(/^[\t\n\f ]$/)) {
         return beforeAttributeName;
-        // 下一个else 有不差别，但应该是他写错了条件
     } else if (c == '/' || c == '>' || c == EOF) {
         return afterAttributeName(c);
     } else if (c == '=') {
@@ -387,7 +379,7 @@ function afterAttributeName(c) {
     } else if (c == "/") {
         return selfClosingStartTag;
     } else if (c == "=") {
-        // 有差别
+        // 有差别  两种方式应该是不同的  不一定是谁写错了
         // return beforeAttributeName;
         return beforeAttributeValue
     } else if (c == ">") {
@@ -416,3 +408,13 @@ module.exports.parseHTML = function parseHTML(html) {
     state = state(EOF)
     return stack[0];
 }
+
+// 备注：
+// 1、element.parent = top;  这句是起什么作用来着
+// 2、function afterAttributeName（）中
+// if (c == "=") {
+//   //   两种方式应该是不同的  不一定是谁写错了
+//     // return beforeAttributeName;
+//     return beforeAttributeValue
+// }
+// 每个函数是做什么的要补充注释进去
