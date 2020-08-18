@@ -1,71 +1,73 @@
 let net = require('net');
-const parser = require('./parser.js');
+const parser = require('./parser');
 
-class Request{
-    constructor(options={}){
+class Request {
+    constructor(options = {}) {
         this.method = options.method || 'GET';
         this.port = options.port || 80;
         this.host = options.host;
         this.path = options.path || '/';
         this.body = options.body || {};
         this.headers = options.headers || {};
-        if(!this.headers['Content-Type']){
+        if (!this.headers['Content-Type']) {
             this.headers['Content-Type'] = 'application/x-www-form-urlencoded';
         }
-        
-        if(this.headers['Content-Type']==='application/json'){
+
+        if (this.headers['Content-Type'] === 'application/json') {
             this.bodyText = JSON.stringify(this.body);
-        }else if(this.headers['Content-Type']==='application/x-www-form-urlencoded'){
+        } else if (this.headers['Content-Type'] === 'application/x-www-form-urlencoded') {
             // console.log(this.body)
-            this.bodyText = Object.keys(this.body).map(key=>`${key}=${encodeURIComponent(this.body[key])}`).join('&')
+            this.bodyText = Object.keys(this.body).map(key => `${key}=${encodeURIComponent(this.body[key])}`).join('&')
         }
 
         this.headers['Content-Length'] = this.bodyText.length;
     }
 
-    send(connection){
+    send(connection) {
         // console.log(this.host,this.port,this.toString());
-        debugger;
-        return new Promise((resolve,reject)=>{
-            const parser = new ResponseParser;
-            if(connection){
+        // debugger;
+        return new Promise((resolve, reject) => {
+            // const parser = new ResponseParser;
+            //  有差别
+            const parser = new ResponseParser()
+            if (connection) {
                 connection.write(this.toString());
-            }else{
+            } else {
                 connection = net.createConnection({
-                    host:this.host,
-                    port:this.port
-                },()=>{
+                    host: this.host,
+                    port: this.port
+                }, () => {
                     connection.write(this.toString());
                 })
             }
 
-            connection.on('data',(data)=>{
+            connection.on('data', (data) => {
                 // console.log(data.toString());
                 parser.receive(data.toString());
-                if(parser.isFinished){
+                if (parser.isFinished) {
                     resolve(parser.response);
                     connection.end();
                 }
             });
 
-            connection.on('error',(err)=>{
+            connection.on('error', (err) => {
                 reject(err);
                 connection.end();
             });
         })
     }
-
-    toString(){
-        return `${this.method} ${this.path} HTTP/1.1\r\n`+
-        `${Object.keys(this.headers).map(key=>`${key}: ${this.headers[key]}`).join('\r\n')}\r\n\r\n`+
-        `${this.bodyText}\r\n`
+// 有差别 这个位置的写法各有不同
+    toString() {
+        return `${this.method} ${this.path} HTTP/1.1\r\n` +
+            `${Object.keys(this.headers).map(key=>`${key}: ${this.headers[key]}`).join('\r\n')}\r\n\r\n` +
+            `${this.bodyText}\r\n`
     }
 }
 
-class ResponseParser{
-    constructor(){
+class ResponseParser {
+    constructor() {
         this.WAITING_STATUS_LINE = 0; // /r
-        this.WAITING_STATUS_LINE_END = 1;// /n
+        this.WAITING_STATUS_LINE_END = 1; // /n
         this.WAITING_HEADER_NAME = 2;
         this.WAITING_HEADER_SPACE = 3;
         this.WAITING_HEADER_VALUE = 4;
@@ -80,74 +82,78 @@ class ResponseParser{
         this.headerValue = '';
         this.bodyParser = null;
     }
-    get isFinished(){
+    get isFinished() {
         return this.bodyParser && this.bodyParser.isFinished;
     }
-    get response(){
+    get response() {
         this.statusLine.match(/HTTP\/1.1 ([0-9]+) ([\s\S]+)/);
         return {
             statusCode: RegExp.$1,
             statusText: RegExp.$2,
-            headers : this.headers,
+            headers: this.headers,
             body: this.bodyParser.content.join('')
         }
     }
-    receive(string){
-        for(let i=0;i<string.length;i++){
+    receive(string) {
+        for (let i = 0; i < string.length; i++) {
             this.receiveChar(string.charAt(i));
         }
     }
-    receiveChar(char){
-        if(this.current === this.WAITING_STATUS_LINE){
-            if(char === '\r'){
-                this.current = this.WAITING_HEADER_LINE_END;
-            }else{
+    receiveChar(char) {
+        if (this.current === this.WAITING_STATUS_LINE) {
+            if (char === '\r') {
+                // 有差别，状态机写错了？
+                // this.current = this.WAITING_HEADER_LINE_END;
+                this.current = this.WAITING_STATUS_LINE_END
+            } else {
                 this.statusLine += char;
             }
-        }else if(this.current === this.WAITING_HEADER_LINE_END){
-            if(char === '\n'){
+        // } else if (this.current === this.WAITING_HEADER_LINE_END) {
+        } else if (this.current === this.WAITING_STATUS_LINE_END) {
+
+            if (char === '\n') {
                 this.current = this.WAITING_HEADER_NAME;
             }
-        }else if(this.current === this.WAITING_HEADER_NAME){
-            if(char === ':'){
+        } else if (this.current === this.WAITING_HEADER_NAME) {
+            if (char === ':') {
                 this.current = this.WAITING_HEADER_SPACE;
-            }else if(char === '\r'){
+            } else if (char === '\r') {
                 this.current = this.WAITING_HEADER_BLOCK_END;
-                if(this.headers['Transfer-Encoding'] === 'chunked'){
+                if (this.headers['Transfer-Encoding'] === 'chunked') {
                     this.bodyParser = new TrunkedBodyParser();
                 }
-            }else{
+            } else {
                 this.headerName += char;
             }
-        }else if(this.current === this.WAITING_HEADER_SPACE){
-            if(char === ' '){
+        } else if (this.current === this.WAITING_HEADER_SPACE) {
+            if (char === ' ') {
                 this.current = this.WAITING_HEADER_VALUE;
             }
-        }else if(this.current === this.WAITING_HEADER_VALUE){
-            if(char === '\r'){
+        } else if (this.current === this.WAITING_HEADER_VALUE) {
+            if (char === '\r') {
                 this.current = this.WAITING_HEADER_LINE_END;
                 this.headers[this.headerName] = this.headerValue;
                 this.headerName = '';
                 this.headerValue = '';
-            }else{
+            } else {
                 this.headerValue += char;
             }
-        }else if(this.current === this.WAITING_HEADER_LINE_END){
-            if(char === '\n'){
+        } else if (this.current === this.WAITING_HEADER_LINE_END) {
+            if (char === '\n') {
                 this.current = this.WAITING_HEADER_NAME;
             }
-        }else if(this.current === this.WAITING_HEADER_BLOCK_END){
-            if(char === '\n'){
+        } else if (this.current === this.WAITING_HEADER_BLOCK_END) {
+            if (char === '\n') {
                 this.current = this.WAITING_BODY;
             }
-        }else if(this.current === this.WAITING_BODY){
+        } else if (this.current === this.WAITING_BODY) {
             // console.log(char)
             this.bodyParser.receiveChar(char);
         }
     }
 }
-class TrunkedBodyParser{
-    constructor(){
+class TrunkedBodyParser {
+    constructor() {
         this.WAITING_LENGTH = 0;
         this.WAITING_LENGTH_LINE_END = 1;
         this.READING_CHUNK = 2;
@@ -160,22 +166,22 @@ class TrunkedBodyParser{
         this.current = this.WAITING_LENGTH;
     }
 
-    receiveChar(char){
-        if(this.current === this.WAITING_LENGTH){
-            if(char === '\r'){
-                if(this.length === 0){
+    receiveChar(char) {
+        if (this.current === this.WAITING_LENGTH) {
+            if (char === '\r') {
+                if (this.length === 0) {
                     this.isFinished = true;
                 }
                 this.current = this.WAITING_LENGTH_LINE_END;
-            }else{
+            } else {
                 this.length *= 16;
-                this.length += parseInt(char,16);
+                this.length += parseInt(char, 16);
             }
-        }else if(this.current === this.WAITING_LENGTH_LINE_END){
-            if(char === '\n'){
-                this.current === this.READING_CHUNK;
+        } else if (this.current === this.WAITING_LENGTH_LINE_END) {
+            if (char === '\n') {
+                this.current = this.READING_CHUNK;
             }
-        }else if(this.current === this.READING_CHUNK){
+        } else if (this.current === this.READING_CHUNK) {
             // if(this.length!==0){ // make sure it's volid to push a new char to the content
             //     this.content.push(char);
             // }
@@ -183,45 +189,46 @@ class TrunkedBodyParser{
             //     this.current = this.WAITING_NEW_LINE;
             //     this.length = 0; //RESET for a chunk
             // }
+            // 有差别，更正后的，上面错误的代码不知道是怎么加的 23333
             this.content.push(char);
-            this.length -- ;
-            if(this.length === 0){
+            this.length--;
+            if (this.length === 0) {
                 this.current = this.WAITING_NEW_LINE;
             }
-        }else if(this.current === this.WAITING_NEW_LINE){
-            if(char === '\r'){
+        } else if (this.current === this.WAITING_NEW_LINE) {
+            if (char === '\r') {
                 this.current = this.WAITING_NEW_LINE_END;
             }
-        }else if(this.current = this.WAITING_NEW_LINE_END){
-            if(char === '\n'){
-                this.current === this.WAITING_LENGTH;
+        } else if (this.current = this.WAITING_NEW_LINE_END) {
+            if (char === '\n') {
+                this.current = this.WAITING_LENGTH;
             }
         }
     }
 }
 
-void async function (){
+void async function () {
     let request = new Request({
-        method:'POST',
-        host:'127.0.0.1',
-        port: 8088,
-        path:'/',
-        headers:{
-            ['x-Foo2']:'customed'
+        method: 'POST',
+        host: '127.0.0.1',
+        port: '8088',
+        path: '/',
+        headers: {
+            ['x-Foo2']: 'customed'
         },
-        body:{
-            name:'wangqi'
+        body: {
+            name: 'wangqi'
         }
     });
 
-    try{
+    // try {
         let response = await request.send();
 
         let dom = parser.parseHTML(response.body)
-        console.log(JSON.stringify(dom, null, "    "));
-        // console.log('dom',dom)
-    }catch(err){
-        console.log('error: ',err.message)
-    }
+        console.log(JSON.stringify(dom, null, '     '))
+        console.log('')
+    // } catch (err) {
+    //     console.log('error: ', err.message)
+    // }
 
 }();
