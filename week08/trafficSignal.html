@@ -1,0 +1,125 @@
+<style>
+    div {
+      background-color: grey;
+      display: inline-block;
+      margin: 30px;
+      width: 100px;
+      height: 100px;
+      border-radius: 50px;
+    }
+    .green.light {
+      background-color: green;
+    }
+    .red.light {
+      background-color: red;
+    }
+    .yellow.light {
+      background-color: yellow;
+    }
+  </style>
+  
+  <div class="green"></div>
+  <div class="yellow"></div>
+  <div class="red"></div>
+  
+  
+  <script>
+    function showGreen(time) {
+      let lights = document.getElementsByTagName("div");
+      for (let i = 0; i < 3; i++) {
+        lights[i].classList.remove("light");
+      }
+      document.getElementsByClassName("green")[0].classList.add("light");
+    }
+  
+    function showRed(time) {
+      let lights = document.getElementsByTagName("div");
+      for (let i = 0; i < 3; i++) {
+        lights[i].classList.remove("light");
+      }
+      document.getElementsByClassName("red")[0].classList.add("light");
+    }
+  
+    function showYellow(time) {
+      let lights = document.getElementsByTagName("div");
+      for (let i = 0; i < 3; i++) {
+        lights[i].classList.remove("light");
+      }
+      document.getElementsByClassName("yellow")[0].classList.add("light");
+    }
+  
+    function wait(time) {
+      return new Promise((resolve, reject) => {
+        setTimeout(resolve, time);
+      })
+    }
+  
+    // 用回调的方式写
+    function callback() {
+      showGreen();
+      setTimeout(() => {
+        showYellow();
+        setTimeout(() => {
+          showRed();
+          setTimeout(() => {
+            callback();
+          }, 5000);
+        }, 2000);
+      }, 10000);
+    }
+  
+    // 用promise的方式写
+    function promise() {
+      showGreen();
+      wait(10000)
+        .then(() => {
+          showYellow();
+          return wait(2000);
+        })
+        .then(() => {
+          showRed();
+          return wait(5000);
+        })
+        .then(loop)
+    }
+  
+    // async
+    async function async() {
+      while(true) {
+        showGreen();
+        await wait(10000);
+        showYellow();
+        await wait(2000);
+        showRed();
+        await wait(5000);
+      }
+    }
+  
+    // generator 
+    function *generator() {
+      while(true) {
+        showGreen();
+        yield wait(10000);
+        showYellow();
+        yield wait(2000);
+        showRed();
+        yield wait(5000);
+      }
+    }
+    function run(iterator) {
+      let { value, done } = iterator.next();
+      if (done) return;
+      if (value instanceof Promise) {
+        value.then(() => run(iterator))
+      }
+    }
+    function co(generator) {
+      return function() {
+        return run(generator());
+      }
+    }
+    generator = co(generator);
+    generator();
+  </script>
+  
+  
