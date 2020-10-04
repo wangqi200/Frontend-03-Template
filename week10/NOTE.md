@@ -10,17 +10,19 @@ Operate：+、-、*、/之一
 Whitespace：<SP>
 LineTerminator:<LF><CR>
 
-``
+```
 //TERMINAL SYMBOL : <EOF>
 <Expression>::= <AdditiveExpression><EOF>
   //TERMINAL SYMBOL : <+> <->
   <AdditiveExpression>::= <MultiplicativeExpression> | <AdditiveExpression> <+> <MultiplicativeExpression> | <AdditiveExpression> <-> <MultiplicativeExpression>
   //TERMINAL SYMBOL : <NUMBER> <*> </>
   <MultiplicativeExpression> ::= <Number> | <MultiplicativeExpression> <*> <Number>| <MultiplicativeExpression> </> <Number>
-``
+```
+
+
 
 #### 词法分析正则
-`` 
+``` 
 var regexp = /([0-9\.]+)|([ \t]+)|([\r\n]+)|(\*)|(\/)|(\+)|(\-)/g
 
     var dictionary = ["Number", "Whitespace", "LineTerminator", "*", "/", "+", "-"];
@@ -41,10 +43,10 @@ var regexp = /([0-9\.]+)|([ \t]+)|([\r\n]+)|(\*)|(\/)|(\+)|(\-)/g
         }
     }
 
-``
+```
 
 #### MultiplicativeExpression
-``
+```
  function MultiplicativeExpression(source){
         if(source[0].type === "Number"){
             let node = {
@@ -85,10 +87,10 @@ var regexp = /([0-9\.]+)|([ \t]+)|([\r\n]+)|(\*)|(\/)|(\+)|(\-)/g
 
         // console.log(source);
     }
-``
+```
 
 #### AdditiveExpression
-``
+```
 function AdditiveExpression(source){
         if(source[0].type === "MultiplicativeExpression"){
             let node = {
@@ -129,9 +131,11 @@ function AdditiveExpression(source){
         MultiplicativeExpression(source);
         return  AdditiveExpression(source)
     }
-``
+```
+
 #### Expression
-``
+
+```
 function Expression(tokens){
         if(source[0].type === "AdditiveExpression" && source[1] && source[1].type === "EOF"){
             let node = {
@@ -144,4 +148,4 @@ function Expression(tokens){
         AdditiveExpression(source);
         returnExpression(source);
     }
-``
+```
