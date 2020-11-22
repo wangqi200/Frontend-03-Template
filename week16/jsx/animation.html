@@ -1,0 +1,28 @@
+<head>
+    <style>
+     .carousel{
+         overflow: hidden;
+         width:500px;
+         height:280px;
+         white-space: nowrap;
+     }
+     .carousel>div {
+         width:500px;
+         height:280px;
+         display: inline-block;
+         background-size: contain;
+         transition: ease 0.5s;
+     }
+    </style>
+ </head>
+ <body>
+     <div id="el" style="width: 100px; height: 100px; background-color: lightblue;"></div>
+     <div id="el2" style="width: 100px; height: 100px; background-color: pink;"></div>
+
+     <button id="pause-btn"></button>
+     <button id="resume-btn"></button>
+
+     <script type="module" src='./animation-demo.js'></script>
+ 
+ </body>
+ 
